@@ -21,7 +21,16 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: _row
+            data_tests:
+              - unique
+              - not_null
           - name: product_id
+            data_tests:
+              - relationships:
+                  to: source('sql_server_db','products')
+                  field: product_id
           - name: quantity
+            data_tests:
+              - positive_values
           - name: month
-          - name: _fivetran_synceds
+          - name: _fivetran_synced

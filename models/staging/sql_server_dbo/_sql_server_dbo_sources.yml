@@ -21,7 +21,16 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: address_id
+            data_tests:
+              - unique
+              - not_null
+            description: >
+              Unique identifier for an address.
           - name: zipcode
+            data_tests:
+              - positive_values
+            description: >
+              Numerical series of values that represent geographical areas.
           - name: country
           - name: address
           - name: state
@@ -32,10 +41,17 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: event_id
+            data_tests:
+              - unique
+              - not_null
           - name: page_url
           - name: event_type
           - name: user_id
+            data_tests:
+              - not_null
           - name: session_id
+            data_tests:
+              - not_null
           - name: created_at
           - name: order_id
           - name: _fivetran_deleted
@@ -45,13 +61,24 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: order_id
+            data_tests:
+              - unique
+              - not_null
           - name: shipping_service
+            data_tests:
+              - not_null
+              - positive_values
           - name: address_id
+            data_tests:
+              - not_null
+              - positive_
           - name: created_at
           - name: promo_id
           - name: estimated_delivery_at
           - name: order_cost
           - name: user_id
+            data_tests:
+              - not_null
           - name: order_total
           - name: delivered_at
           - name: tracking_id
@@ -97,6 +124,9 @@ sources:
           - name: total_orders
           - name: first_name
           - name: email
+            data_tests:
+              - not_null
+              - re_email
           - name: _fivetran_deleted
           - name: _fivetran_synced
           
