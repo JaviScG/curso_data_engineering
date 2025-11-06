@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: stg_promos
+    description: >
+      Staging model that standardizes and validates the promotional offers
+      data coming from the `sql_server_dbo.promos` source.
+
+    config:
+      contract:
+        enforced: true  # Enforces schema and data type consistency
+
+    columns:
+      - name: promo_id
+        description: >
+          Unique identifier for each promotional offer.
+        data_type: integer
+        constraints:
+          - type: primary_key
+          - type: not_null
+
+      - name: name
+        description: >
+          Name or title of the promotion.
+        data_type: varchar
+        constraints:
+          - type: not_null
+
+      - name: discount
+        description: >
+          Discount value or percentage applied by the promotion.
+        data_type: numeric
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "discount >= 0"
+
+      - name: status
+        description: >
+          Current status of the promotion (e.g., active, expired, inactive).
+        data_type: varchar
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "status IN ('active', 'inactive', 'expired')"
+
+      - name: created_at
+        description: >
+          Timestamp when the promotion was created.
+        data_type: timestamp
+
+      - name: updated_at
+        description: >
+          Timestamp when the promotion record was last updated.
+        data_type: timestamp
+
+      - name: _fivetran_deleted
+        description: >
+          Boolean field managed by Fivetran to indicate if a record was deleted
+          in the source system.
+        data_type: boolean
+
+      - name: _fivetran_synced
+        description: >
+          Timestamp managed by Fivetran indicating when the record was last synced
+          from the source system.
+        data_type: timestamp

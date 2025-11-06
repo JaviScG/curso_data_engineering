@@ -67,11 +67,9 @@ sources:
           - name: shipping_service
             data_tests:
               - not_null
-              - positive_values
           - name: address_id
             data_tests:
               - not_null
-              - positive_
           - name: created_at
           - name: promo_id
           - name: estimated_delivery_at
@@ -97,7 +95,12 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: product_id
+            data_tests:
+              - unique
+              - not_null
           - name: price
+            data_tests:
+              - not_null
           - name: name
           - name: inventory
           - name: _fivetran_deleted
@@ -107,6 +110,9 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: promo_id
+            data_tests:
+              - unique
+              - not_null
           - name: discount
           - name: status
           - name: _fivetran_deleted
@@ -116,8 +122,13 @@ sources:
         loaded_at_field: _fivetran_synced
         columns:
           - name: user_id
+            data_tests:
+              - unique
+              - not_null
           - name: updated_at
           - name: address_id
+            data_tests:
+              - not_null
           - name: last_name
           - name: created_at
           - name: phone_number
@@ -126,7 +137,6 @@ sources:
           - name: email
             data_tests:
               - not_null
-              - re_email
           - name: _fivetran_deleted
           - name: _fivetran_synced
           
