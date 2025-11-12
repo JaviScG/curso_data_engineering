@@ -1,0 +1,322 @@
+version: 2
+
+models:
+  # --- Model: stg_sql_server_dbo__addresses ---
+  - name: stg_sql_server_dbo__addresses
+    description: "Staging model for addresses. Cleans and extracts components from the original address. Filters out soft-deleted records."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: address_id
+        description: "Primary key (PK) for the address."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: zipcode_id
+        description: "Foreign key (FK), hashed, linking to the zipcodes table."
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sql_server_dbo__zipcode')
+              field: zipcode_id
+      - name: street
+        description: "Street name, extracted from the full address (without the number)."
+        data_type: varchar
+      - name: address
+        description: "The complete and original address string."
+        data_type: varchar
+      - name: _fivetran_deleted
+        description: "Fivetran flag indicating if the record was deleted in the source system."
+        data_type: boolean
+      - name: _fivetran_synced
+        description: "Fivetran timestamp of the last synchronization."
+        data_type: timestamp_tz
+
+  # --- Model: stg_sql_server_dbo__country ---
+  - name: stg_sql_server_dbo__country
+    description: "Staging model for countries. Extracts and deduplicates countries from the addresses table."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: country_id
+        description: "Primary key (PK), hashed, for the country."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: country_name
+        description: "Name of the country."
+        data_type: varchar
+        tests:
+          - not_null
+
+  # --- Model: stg_sql_server_dbo__orders ---
+  - name: stg_sql_server_dbo__orders
+    description: "Staging model for orders. Cleans, converts time zones, and handles null values."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_id
+        description: "Primary key (PK) for the order."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: shipping_service_id
+        description: "Foreign key (FK), hashed, linking to the shipping services table."
+        data_type: varchar
+      - name: shipping_cost
+        description: "Shipping cost, with nulls converted to 0."
+        data_type: float
+        tests:
+          - not_null
+      - name: address_id
+        description: "Foreign key (FK) for the shipping address."
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sql_server_dbo__addresses')
+              field: address_id
+      - name: created_at
+        description: "Timestamp of order creation, converted to UTC."
+        data_type: timestamp_tz
+        tests:
+          - not_null
+      - name: promo_id
+        description: "Foreign key (FK), hashed, for the promotion. Maps to 'No promo' if empty."
+        data_type: varchar
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp, converted to UTC."
+        data_type: timestamp_tz
+      - name: order_cost
+        description: "Cost of the order to the business, with nulls converted to 0."
+        data_type: float
+        tests:
+          - not_null
+      - name: order_total
+        description: "Total value paid by the customer for the order."
+        data_type: float
+        tests:
+          - not_null
+      - name: delivered_at
+        description: "Actual delivery timestamp, converted to UTC."
+        data_type: timestamp_tz
+      - name: tracking_id
+        description: "Shipping tracking ID, null if originally empty."
+        data_type: varchar
+      - name: status
+        description: "Current status of the order (e.g., processing, shipped, delivered)."
+        data_type: varchar
+        tests:
+          - not_null
+      - name: _fivetran_deleted
+        description: "Fivetran flag indicating if the record was deleted in the source system."
+        data_type: boolean
+      - name: _fivetran_synced
+        description: "Fivetran timestamp of the last synchronization."
+        data_type: timestamp_tz
+
+  # --- Model: stg_sql_server_dbo__promos ---
+  - name: stg_sql_server_dbo__promos
+    description: "Staging model for promotions. Includes a 'No promo' record to ensure join integrity."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: promo_id
+        description: "Primary key (PK), hashed, for the promotion. Includes 'No promo'."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: promo_name
+        description: "Name of the promotion (based on original promo_id) or 'No promo'."
+        data_type: varchar
+        tests:
+          - not_null
+      - name: discount_dollars
+        description: "Discount value in dollars."
+        data_type: number(38, 2)
+        tests:
+          - not_null
+      - name: status
+        description: "Status of the promotion (e.g., active, inactive)."
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'inactive']
+      - name: _fivetran_deleted
+        description: "Fivetran flag indicating if the record was deleted in the source system."
+        data_type: boolean
+      - name: _fivetran_synced
+        description: "Fivetran timestamp of the last synchronization."
+        data_type: timestamp_tz
+
+  # --- Model: stg_sql_server_dbo__state ---
+  - name: stg_sql_server_dbo__state
+    description: "Staging model for states/provinces. Extracts and deduplicates data from addresses."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: state_id
+        description: "Primary key (PK), hashed, for the state."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: state_name
+        description: "Name of the state."
+        data_type: varchar
+        tests:
+          - not_null
+      - name: country_id
+        description: "Foreign key (FK), hashed, linking to the country."
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sql_server_dbo__country')
+              field: country_id
+
+  # --- Model: stg_sql_server_dbo__zipcode ---
+  - name: stg_sql_server_dbo__zipcode
+    description: "Staging model for zip codes. Extracts and deduplicates data from addresses."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: zipcode_id
+        description: "Primary key (PK), hashed, for the zip code."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: zipcode
+        description: "The raw zip code value."
+        data_type: number(38,0)
+        tests:
+          - not_null
+      - name: state_id
+        description: "Foreign key (FK), hashed, linking to the state."
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sql_server_dbo__state')
+              field: state_id
+
+  # --- Model: stg_sql_server_dbo_shipping_services ---
+  - name: stg_sql_server_dbo_shipping_services
+    description: "Staging model for shipping services. Deduplicated from orders and includes an 'Unknown' record."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: shipping_service_id
+        description: "Primary key (PK), hashed, for the shipping service. Includes 'Unknown'."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: shipping_service_name
+        description: "Name of the shipping service, standardized with initial caps."
+        data_type: varchar
+        tests:
+          - not_null
+
+  # --- Model: stg_sql_server_dbo_users ---
+  - name: stg_sql_server_dbo_users
+    description: "Staging model for user data. Cleans, standardizes, and filters records from the raw dbo.users source table."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: user_id
+        description: "Primary key (PK) unique identifier for each user."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: updated_at
+        description: "Date of a user's last profile update."
+        data_type: timestamp_tz
+        tests:
+          - not_null
+      - name: address_id
+        description: "Foreign key (FK) linking the user to their primary address."
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sql_server_dbo__addresses')
+              field: address_id
+      - name: last_name
+        description: "User's last name."
+        data_type: varchar
+        tests:
+          - not_null
+      - name: created_at
+        description: Date of user's profile creation.
+        data_type: timestamp
+        tests:
+          - not_null
+      - name: phone_number
+        description: "User's phone number."
+        data_type: varchar
+        tests:
+          - not_null 
+      - name: total_orders
+        description:  User's total amount of orders placed.
+        data_type: number(38,0)
+      - name: first_name
+        description: "User's first name."
+        data_type: varchar
+      - name: email
+        description: "User's primary email address."
+        data_type: varchar
+        tests:
+          - not_null
+      - name: _fivetran_deleted
+        description: "Fivetran flag indicating if the record was deleted in the source system."
+        data_type: boolean
+      - name: _fivetran_synced
+        description: "Fivetran timestamp indicating when the record was last synced."
+        data_type: timestamp_tz
+  - name: sql_server_dbo__order_items
+    description: "Detailed line items for orders, including product quantity and Fivetran synchronization metadata."
+    columns:
+      - name: order_id
+        data_type: varchar
+        description: "The unique identifier for the order."
+        tests:
+          - not_null
+      
+      - name: product_id
+        data_type: varchar
+        description: "The unique identifier for the product in the line item."
+        tests:
+          - not_null
+
+      - name: quantity
+        data_type: number(38,0)
+        description: "The quantity of the product ordered."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: _fivetran_deleted
+        data_type: boolean
+        description: "Soft-delete flag used by Fivetran. TRUE (1) if the row has been logically deleted."
+      
+      - name: _fivetran_synced
+        data_type: timestamp
+        description: "Timestamp of the last successful Fivetran synchronization for this row."
