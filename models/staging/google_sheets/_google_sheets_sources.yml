@@ -4,21 +4,17 @@ sources:
 
   - name: google_sheets # name of the source 
     schema: google_sheets # this is the schema our raw data lives in
-    database: ALUMNO17_DEV_BRONZE_DB # this is the name of our database
+    database: "{{ env_var('DBT_ENVIRONMENTS') }}_BRONZE_DB"  # this is the name of our database
 
     quoting:
       database: false
       schema: false
       identifier: false
 
-    freshness:
-      warn_after: {count: 600, period: day}
-      error_after: {count: 600, period: day}
 
     tables:
 
       - name: budget
-        loaded_at_field: _fivetran_synced
         columns:
           - name: _row
             data_tests:
@@ -27,10 +23,24 @@ sources:
           - name: product_id
             data_tests:
               - relationships:
-                  to: source('sql_server_db','products')
-                  field: product_id
+                  arguments:
+                    to: source('sql_server_db','products')
+                    field: product_id
           - name: quantity
             data_tests:
               - positive_values
           - name: month
           - name: _fivetran_synced
+        config:
+          loaded_at_field: _fivetran_synced
+      - name: users
+        columns:
+          - name: Nombre
+          - name: DNI
+          - name: email
+          - name: fecha_alta_sistema
+    config:
+      freshness:
+        warn_after: {count: 600, period: day}
+        error_after: {count: 600, period: day}
+      

@@ -4,21 +4,17 @@ sources:
 
   - name: sql_server_dbo # name of the source 
     schema: sql_server_dbo # this is the schema our raw data lives in
-    database: ALUMNO17_DEV_BRONZE_DB # this is the name of our database
+    database: "{{ env_var('DBT_ENVIRONMENTS') }}_BRONZE_DB" # this is the name of our database
 
     quoting:
       database: false
       schema: false
       identifier: false
 
-    freshness:
-      warn_after: {count: 600, period: day}
-      error_after: {count: 600, period: day}
 
     tables:
 
       - name: addresses
-        loaded_at_field: _fivetran_synced
         columns:
           - name: address_id
             data_tests:
@@ -37,8 +33,9 @@ sources:
           - name: _fivetran_deleted
           - name: _fivetran_synced
 
+        config:
+          loaded_at_field: _fivetran_synced
       - name: events
-        loaded_at_field: _fivetran_synced
         columns:
           - name: event_id
             data_tests:
@@ -56,9 +53,10 @@ sources:
           - name: order_id
           - name: _fivetran_deleted
           - name: _fivetran_synced
-          
+
+        config:
+          loaded_at_field: _fivetran_synced
       - name: orders
-        loaded_at_field: _fivetran_synced
         columns:
           - name: order_id
             data_tests:
@@ -83,16 +81,18 @@ sources:
           - name: status
           - name: _fivetran_deleted
           - name: _fivetran_synced
+        config:
+          loaded_at_field: _fivetran_synced
       - name: order_items
-        loaded_at_field: _fivetran_synced
         columns:
           - name: order_id
           - name: product_id
           - name: quantity
           - name: _fivetran_deleted
           - name: _fivetran_synced
+        config:
+          loaded_at_field: _fivetran_synced
       - name: products
-        loaded_at_field: _fivetran_synced
         columns:
           - name: product_id
             data_tests:
@@ -106,8 +106,9 @@ sources:
           - name: _fivetran_deleted
           - name: _fivetran_synced
 
+        config:
+          loaded_at_field: _fivetran_synced
       - name: promos
-        loaded_at_field: _fivetran_synced
         columns:
           - name: promo_id
             data_tests:
@@ -117,9 +118,10 @@ sources:
           - name: status
           - name: _fivetran_deleted
           - name: _fivetran_synced
-        
+
+        config:
+          loaded_at_field: _fivetran_synced
       - name: users
-        loaded_at_field: _fivetran_synced
         columns:
           - name: user_id
             data_tests:
@@ -139,4 +141,9 @@ sources:
               - not_null
           - name: _fivetran_deleted
           - name: _fivetran_synced
-          
+        config:
+          loaded_at_field: _fivetran_synced
+    config:
+      freshness:
+        warn_after: {count: 600, period: day}
+        error_after: {count: 600, period: day}

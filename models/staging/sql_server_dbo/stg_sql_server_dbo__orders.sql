@@ -1,22 +1,34 @@
-{{
-    config(materialized='view')
-}}
+{{ config(
+    materialized='incremental',
+    unique_key = 'ORDER_ID',
+    on_schema_change='fail'
+    ) 
+    }}
 
 
 WITH src_orders AS (
     SELECT
     *
+    
     FROM {{source('sql_server_dbo','orders')}}
+    {% if is_incremental() %}
+
+	  WHERE _fivetran_synced > (SELECT MAX(_fivetran_synced) FROM {{ this }} )
+
+    {% endif %}
 )
 
 SELECT
 ORDER_ID,
-MD5(INITCAP(SHIPPING_SERVICE)) AS SHIPPING_SERVICE_ID,
+CASE
+WHEN SHIPPING_SERVICE = '' THEN ''
+ELSE MD5(INITCAP(SHIPPING_SERVICE))
+END AS SHIPPING_SERVICE_ID,
 COALESCE(SHIPPING_COST,0) AS SHIPPING_COST,
 ADDRESS_ID,
 CONVERT_TIMEZONE('UTC',CREATED_AT) AS CREATED_AT,
 CASE
-WHEN PROMO_ID = '' THEN MD5('No promo')
+WHEN PROMO_ID = '' THEN ''
 ELSE MD5(PROMO_ID)
 END AS PROMO_ID,
 CONVERT_TIMEZONE('UTC',ESTIMATED_DELIVERY_AT) AS ESTIMATED_DELIVERY_AT,

@@ -1,0 +1,16 @@
+packages:
+  # Paquetes con macros de utilidad - DBT Hub
+  - package: dbt-labs/dbt_utils
+    version: 1.3.0
+  
+  # Paquetes con macros (generación de código) - DBT Hub
+  - package: dbt-labs/codegen
+    version: 0.13.1
+    
+  # Paquete de evaluación de proyectos - DBT Hub
+  - package: dbt-labs/dbt_project_evaluator
+    version: 0.10.0
+    
+  # Paquete adicional para auditoría - DBT Hub
+  - package: dbt-labs/audit_helper
+    version: 0.11.0
